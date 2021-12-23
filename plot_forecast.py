@@ -15,7 +15,7 @@ from scipy.interpolate import interp1d
 
 lat = 42.34
 long = -71.12
-forecast_hours = 36
+forecast_hours = 48
 
 plt.rcParams["font.family"] = "SF Mono"
 plt.rcParams["mathtext.fontset"] = "custom"
@@ -24,6 +24,7 @@ plt.rcParams['text.color'] = COLOR
 plt.rcParams['axes.labelcolor'] = COLOR
 plt.rcParams['xtick.color'] = COLOR
 plt.rcParams['ytick.color'] = COLOR
+plt.rcParams['timezone'] = "ET"
 
 # First, grab the office, etc. data.
 
@@ -56,15 +57,13 @@ else:
     print("Found location, but could not get the simple forecast.")
 
 
-
-
 def time_data_parser(time_data: List[Dict[str, float]], unit: unyt.unyt_quantity, label: str) -> Tuple[List[datetime.datetime], unyt.unyt_array]:
     times = []
     values = []
 
     for individual_data in time_data:
         times.append(
-            datetime.datetime.strptime(individual_data["validTime"].split("+")[0], "%Y-%m-%dT%H:%M:%S").astimezone(tz=tz)
+            datetime.datetime.strptime(individual_data["validTime"].split("+")[0]+"UTC", "%Y-%m-%dT%H:%M:%S%Z").astimezone(tz=tz)
         )
 
         values.append(
@@ -95,9 +94,6 @@ T_times, temperatures = data_wrapper("temperature", unyt.C, "Temperature")
 
 H_times, heatIndex = data_wrapper("apparentTemperature", unyt.C, "Feels-Like Temperature")
 
-#print(raw_data["properties"].keys())
-
-
 # Let's show:
 # apparentTemperature
 # windSpeed, windGust, windDirection
@@ -111,7 +107,6 @@ def wrap_string(
     n_char=45,
 ):
     return textwrap.fill(string, n_char)
-    #return "\n".join([string[x * n_char: (x+1) * n_char] for x in range((len(string) // n_char) + 1)])
 
 ax[0].axis("off")
 ax[0].text(0.5, 0.5,
@@ -148,15 +143,6 @@ gust_times, wind_gusts = data_wrapper("windGust", "km/hour", "Wind Gust")
 
 wind_speed_interp = interp1d([x.timestamp() for x in speed_times], wind_speed.v, fill_value="extrapolate")
 
-# with unyt.matplotlib_support:
-#     # plt.plot(times, wind_speed)
-#     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%-I %p\n%a'))
-#     current_time = datetime.datetime.now(tz=tz)
-#     plt.xlim(current_time,current_time + datetime.timedelta(hours=forecast_hours))
-
-# plt.tight_layout()
-# plt.show()
-
 def find_angle_glyph(angle: unyt.unyt_quantity) -> str:
     angles = unyt.unyt_array([0, 45, 90, 135, 180, 225, 270, 315], "degree")
     index = (np.abs(angle - angles)).argmin()
@@ -189,8 +175,8 @@ with unyt.matplotlib_support:
 precip_axis.legend(frameon=False)
 
 
-ax[3].xaxis.set_major_formatter(mdates.DateFormatter('%-I %p\n%a'))
-precip_axis.xaxis.set_major_formatter(mdates.DateFormatter('%-I %p\n%a'))
+ax[3].xaxis.set_major_formatter(mdates.DateFormatter('%-I%p\n%a'))
+precip_axis.xaxis.set_major_formatter(mdates.DateFormatter('%-I%p\n%a'))
 
 # Finish by styling
 
