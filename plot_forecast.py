@@ -13,8 +13,8 @@ import numpy as np
 import textwrap
 from scipy.interpolate import interp1d
 
-lat = 42.34013
-long = -71.12031
+lat = 42.34
+long = -71.12
 forecast_hours = 36
 
 plt.rcParams["font.family"] = "SF Mono"
